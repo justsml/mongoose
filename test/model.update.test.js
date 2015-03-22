@@ -1207,7 +1207,37 @@ describe('model: update:', function(){
   });
 
   
-  describe('upsert helper - defaults and validators (gh-860)', function() {
+  describe('upsert helper method', function() {
+    
+    it('$setOnInsert operator', function(done){
+      var db = start()
+      var schema = Schema({ name: String, age: Number, x: String });
+      var M = db.model('setoninsert-' + random(), schema);
+
+      var match = { name: 'set on insert' };
+      var op = { $setOnInsert: { age: '47' }, x: 'inserted' };
+      M.upsert(match, op, function (err, updated) {
+        assert.ifError(err);
+        M.findOne(function (err, doc) {
+          assert.ifError(err);
+          assert.equal(47, doc.age);
+          assert.equal('set on insert', doc.name);
+
+          var match = { name: 'set on insert' };
+          var op = { $setOnInsert: { age: 108 }, name: 'changed' };
+          M.upsert(match, op, function (err, updated) {
+            assert.ifError(err);
+
+            M.findOne(function (err, doc) {
+              assert.equal(47, doc.age);
+              assert.equal('changed', doc.name);
+              db.close(done);
+            });
+          });
+        });
+      });
+    });
+
     it('applies defaults on upsert helper', function(done) {
       var db = start();
 
