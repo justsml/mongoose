@@ -46,6 +46,26 @@ describe('Query', function(){
     })
   })
 
+  describe('upsert', function(){
+    it('should complete upsert', function(done){
+      var opts = {};
+      var query = new Query({}, opts, null, p1.collection);
+      assert.doesNotThrow(function(){
+        query.upsert({a: 1}, {b: 2}, done);
+      });
+      
+    });
+    it('should apply given upsert flag', function(done){
+      var opts = {};
+      var query = new Query({}, opts, null, p1.collection);
+      query.upsert(true);
+      assert.ok(query._mongooseOptions.upsert);
+      query.upsert(false);
+      assert.ok(!query._mongooseOptions.upsert);
+      done();
+    });
+  })
+
   describe('select', function(){
     it('(object)', function(done){
       var query = new Query({}, {}, null, p1.collection);
@@ -851,9 +871,10 @@ describe('Query', function(){
       var query = new Query({}, {}, null, p1.collection);
       var threw = false;
 
-      try {
         query.exec();
+      try {
       } catch (err) {
+        console.warn('ERR', err);
         threw = true;
       }
 
