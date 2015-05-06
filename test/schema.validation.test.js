@@ -594,7 +594,25 @@ describe('schema', function(){
             });
           });
         });
-          
+
+        it('for custom validators', function(done) {
+          var validate = function() {
+            return false;
+          };
+          var validator = [validate, '{PATH} failed validation ({VALUE})'];
+
+          var schema = new Schema({ x: { type: [], validate: validator }});
+          var M = mongoose.model('custom-validator-'+random(), schema);
+
+          var m = new M({ x: [3,4,5,6] });
+
+          m.validate(function (err) {
+            assert.equal('x failed validation (3,4,5,6)', String(err.errors.x));
+            assert.equal('user defined', err.errors.x.kind);
+            done();
+          });
+        });
+
         it('supports custom properties (gh-2132)', function(done) {
           var schema = new Schema({
             x: {
@@ -615,51 +633,6 @@ describe('schema', function(){
             done();
           });
         });
-      });
-    });
-
-    describe('custom validation', function() {
-      it('fails gracefully', function(done) {
-        var validate = function() {
-          return false;
-        };
-        var validator = [validate, '{PATH} failed validation ({VALUE})'];
-
-        var schema = new Schema({ x: { type: [], validate: validator }});
-        var M = mongoose.model('custom-validator-'+random(), schema);
-
-        var m = new M({ x: [3,4,5,6] });
-
-        m.validate(function (err) {
-          assert.equal('x failed validation (3,4,5,6)', String(err.errors.x));
-          assert.equal('user defined', err.errors.x.kind);
-          done();
-        });
-      });
-
-      it('works', function(done) {
-        var isIpValid = function(s) {return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(s)};
-        
-        var invalidMessage = '{PATH} failed validation ({VALUE})';
-
-        var schema = new Schema({ 
-          ip: { type: String, validate: [isIpValid, invalidMessage] }
-        });
-        var M = mongoose.model('custom-validator-'+random(), schema);
-
-        var good = new M({ ip: '127.0.0.99' });
-        var bad = new M({ ip: 'foo' });
-
-        good.validate(function (err, result) {
-          assert.ok( !err );
-
-          bad.validate(function (err, result) {
-            assert.equal('ip failed validation (foo)', String(err.errors.ip));
-            assert.equal('user defined', err.errors.ip.kind);
-            done();
-          });
-        });
-
       });
     });
 
